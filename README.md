@@ -1,1 +1,1 @@
-# Layman-Capstone-Projec
+# Layman-Capstone-Project
