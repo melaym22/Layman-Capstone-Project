@@ -1,0 +1,36 @@
+Maggie Layman
+Nov/8/2024
+CAPDAP Personal Metadata Hurricane Beryl Hydrolab Data
+
+Original Data is unpublished and recorded by Dr. Bradwin.
+
+This data set is from a hydrolab collecting overnight data from a site along the Oswegatchie River in Huevelton, NY in July of 2024. It was recorded and uploaded by Dr. Brad Baldwin for the purpose of studying invasive Water Chestnuts in the river. This set of data was recorded just before, during, and after the remnants of Hurricane Beryl entered the area of Huevelton and created flooding. 
+
+Key of Column Descriptions:
+
+Site_Num - Site # on the Oswegatchie River
+Site_Type - Whether the site is infested with Water Chestnut (Red) or has little to no Water Chestnut (Green)
+Date - Date the data was recorded MMDDYY
+Time - Time the data was recorded HHMMSS
+Temperature_C - temperature (degrees Celsius)
+pH - pH value
+Conductivity - Specific Conductivity (µS/cm)
+Dissolved_Oxygen_Saturation - Percent of Dissolved Oxygen 
+Dissolved_Oxygen_Volume - Volume of Dissolved Oxygen (mg/L)
+Chlorophyll - Volume of chlorophyll (µg/L)
+
+
+Changes made to the original files:
+	1. combined site 2 + 7 data into one csv file
+	2. deleted empty columns
+	3. deleted excess columns of data from post-hurricane data
+	4. deleted data points where the hydrolab had a power failure
+	5. added site columns to all data and added time column to post-hurricane data
+	6. split date&time columns
+	7. renamed column headings
+	8. deleted unit rows and log data heading
+
+* note that there are some suspicious points where chl is 200000 and do is 0, I will analyze this in R when looking at my dataset
+
+
+

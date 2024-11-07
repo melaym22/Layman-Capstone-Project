@@ -1,0 +1,30 @@
+---
+title: "CAPDAP_exploration"
+author: "ML"
+format: html
+editor: visual
+---
+
+## CAPDAP Data Exploration
+
+preparing my data and running data analysis
+
+```{r}
+rm (list = ls())
+library(here)
+library(tidyverse)
+library(multcomp)
+library(ggfortify)
+```
+
+```{r}
+WC <- read.csv(here("data", "CAPDAP_CleanLog_Final copy.csv"))
+```
+
+a.     Check your data for mistakes and outliers. If there are outliers, decide what you will do with them and provide a justification for your choice and then take whatever action you need to deal with them.
+
+b.     Change any of the variable names or create new variables that you will eventually need for your data analysis.
+
+c.     Write code to save the cleaned, revised dataset in your Data folder with a clear name indicating that it is the version to use in future analysis.
+
+d.     Perform exploratory data analysis as we discussed in class for the data in your project (hint: summary statistics, plots…)
