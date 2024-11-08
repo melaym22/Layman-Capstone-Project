@@ -23,6 +23,12 @@ WC <- read.csv(here("data", "CAPDAP_CleanLog_Final copy.csv"))
 
 a.     Check your data for mistakes and outliers. If there are outliers, decide what you will do with them and provide a justification for your choice and then take whatever action you need to deal with them.
 
+```{r}
+WC$Site_Type <- as.factor(WC$Site_Type)
+WC$Date<-lubridate()
+
+```
+
 b.     Change any of the variable names or create new variables that you will eventually need for your data analysis.
 
 c.     Write code to save the cleaned, revised dataset in your Data folder with a clear name indicating that it is the version to use in future analysis.
