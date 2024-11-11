@@ -1,0 +1,44 @@
+---
+title: "Preliminary_Data_Analysis-TimeSeries"
+author: "ML"
+format: html
+editor: visual
+---
+
+## Preliminary Data Analysis- Time Series Test
+
+CAPDAP "Rough Draft" Project 11/22/2024
+
+Workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+
+start with a clean environment and package installation
+
+```{r}
+rm (list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(multcomp)
+```
+
+read in the data
+
+```{r}
+WC<- read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
+```
+
+let's alter the data types
+
+```{r}
+WC$Site_Type <- as.factor(WC$Site_Type)
+WC$Date<-ymd(WC$Date)
+WC$Time<-hms(WC$Time)
+```
+
+now i'll build my statistical model for a cyclical time series analysis
+
+check model assumptions
+
+run statistical model + interpret the model/relationships
+
+replot the model to show key relationships
