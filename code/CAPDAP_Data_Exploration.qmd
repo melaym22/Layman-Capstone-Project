@@ -23,14 +23,110 @@ WC <- read.csv(here("data", "CAPDAP_CleanLog_Final copy.csv"))
 
 a.     Check your data for mistakes and outliers. If there are outliers, decide what you will do with them and provide a justification for your choice and then take whatever action you need to deal with them.
 
+fix data types
+
 ```{r}
 WC$Site_Type <- as.factor(WC$Site_Type)
-WC$Date<-lubridate()
-
+WC$Date<-mdy(WC$Date)
+WC$Time<-hms(WC$Time)
+  
 ```
+
+check levels
+
+```{r}
+levels(WC$Site_Type)
+```
+
+no issues here so no need to alter factor data
+
+check plots
+
+```{r}
+ggplot(WC,
+  aes(x=Chlorophyll, y=Dissolved_Oxygen_Saturation))+
+    geom_point()+
+    theme_bw()
+```
+
+one outlier - this was definitely an issue with a lab sensor, so I'm going to remove the point
+
+```{r}
+WC <- WC %>%
+  filter(Chlorophyll<10)
+```
+
+```{r}
+ggplot(WC,
+  aes(x=Time, y=pH))+
+    geom_point()+
+    coord_flip()+
+    theme_bw()
+```
+
+there is one really high point beyond 7.6 pH - i'll investigate
+
+the other values taken at this time also seem odd - this likely could have been cause by an issue with the hydrolab so I'm going to take this point out.
+
+```{r}
+WC <- WC %>%
+  filter(pH<7.5)
+  
+```
+
+much better
 
 b.     Change any of the variable names or create new variables that you will eventually need for your data analysis.
 
+N/A
+
 c.     Write code to save the cleaned, revised dataset in your Data folder with a clear name indicating that it is the version to use in future analysis.
 
+```{r}
+write.csv(WC,here("data", "CAPDAP_WC_4Analysis.csv"),row.names=FALSE)
+WC2<-read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
+```
+
+i will use "CAPDAP_WC_4Analysis.csv" in my future analysis
+
 d.     Perform exploratory data analysis as we discussed in class for the data in your project (hint: summary statistics, plots…)
+
+```{r}
+summary(WC2)
+```
+
+returns basic summary, but not intuitively informative, let's see the plots
+
+```{r}
+ggplot(WC,
+  aes(x=Time, y=Dissolved_Oxygen_Saturation))+
+    geom_point()+
+    theme_bw()
+```
+
+I'm not sure exactly how to analyze a time analysis, but It looks like there are a series of DO values below 25 occuring on a regular interval of time (about every 3,000 minutes? i'm unsure of this unit)
+
+```{r}
+ggplot(WC,
+  aes(x=pH, y=Chlorophyll))+
+    geom_point()+
+    theme_bw()
+
+model_WC <- lm(Chlorophyll~ pH,data=WC)
+model_WC
+
+autoplot(model_WC)
+
+```
+
+a linear model is appropriate, there is normality, there is even distribution, and the residuals do not seem to have heavy leverage.
+
+based on the scatterplot, I would expect (7.25-6.45)/(5.2-1.8)=0.8/3.4=0.235 to be the slope and the y intercept to be around -1 to 1.
+
+```{r}
+summary(model_WC)
+```
+
+the slope is -0.2373 and the y intercept is 4.5830.
+
+i'm not completely sure why the y int is so high if there is a negative slope. without getting too far ahead, the adj r\^2 value is onyl 0.00349, so maybe this model is just not fit for the data. I will investigate further in the next steps.
