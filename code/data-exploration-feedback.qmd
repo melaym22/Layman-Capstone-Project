@@ -1,0 +1,22 @@
+---
+title: "data exploration feedback"
+format: html
+editor: visual
+---
+
+## Data Exploration Feedback
+1. I wonder if it would be helpful to also have a mdy_hms column that has the complete time stamp for each observation.
+
+2. I wonder if you should switch your axes for the relationship b/w Chl and DO? I suppose it doesn't matter.
+
+3. Line 52 - looks to me like there might actually be 2 possible outliers? One of your DO values is close to zero.
+
+4. Line 63 - I would generally not use coord_flip when I have time on the X axis as it is such a classic plot to look at that way.
+
+5. Line 77 - While things are indeed "much better" I think you should create some histograms of your pH, DO and Chl data to see the overall frequency of values. Plotting histograms is a basic step in data exploration.
+
+6. Line 107 - need to make sure you know the time units!
+
+I stopped reading after line 117 as that is where you begin to create some statistical models. I'd prefer if your data exploration .qmd file has no actual statistical models in it.
+
+Good job overall!
