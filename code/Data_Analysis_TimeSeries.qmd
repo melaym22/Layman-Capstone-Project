@@ -7,7 +7,7 @@ editor: visual
 
 ## Preliminary Data Analysis- Time Series Test
 
-CAPDAP "Rough Draft" Project 11/22/2024
+CAPDAP "Rough Draft" Project 11/22/24
 
 In this document, I will explore the relationship between time (specifically day vs night) and dissolved oxygen saturation from the data file "CAPDAP_WC_4Analysis.csv."
 
