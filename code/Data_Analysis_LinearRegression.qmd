@@ -37,10 +37,80 @@ WC$Date<-ymd(WC$Date)
 WC$Time<-hms(WC$Time)
 ```
 
-now i'll build my statistical model for a cyclical time series analysis
+My null hypothesis is that there is no relationship between chlorophyll and temperature in my Water Chestnut data.
 
-check model assumptions
+To test this, I'll first plot this proposed relationship (two continutous variables) using a scatterplot, and will later run a linear regression.
 
-run statistical model + interpret the model/relationships
+```{r}
+ggplot(WC,aes(x=Temperature,y=Chlorophyll))+
+  geom_point()+
+  theme_bw()
+```
 
-replot the model to show key relationships
+There appears to be a strong positive relationship, indicating that as temperature increases, so does chlorophyll.
+
+(The rise values can be mapped as (29.3-23) and the run as (5.2-1.8). M=6.3/3.4 or 1.85, so I estimate the slope to be \~1.85 and the y intercept to be around 19.5.
+
+Next, I'll build my statistical model. Since I'm going to run a linear regression, I'll need to start with a model
+
+```{r}
+WCmodel <- lm(Temperature~Chlorophyll, data=WC)
+WCmodel
+```
+
+So, here the slope is 1.733 and the y-int is 19.728. My guesses weren't too far off.
+
+I'll need to check my assumptions before running any tests
+
+```{r}
+autoplot(WCmodel)
+```
+
+Reviewing these charts, I would conclude:
+
+RvFit model - a little wave, but overall a linear model is likely appropriate
+
+Normal Q-Q - looks good, pretty normal data fit to this line
+
+Scale Location - this is a bit concerning, it indicates that there is an unevenness in the residuals
+
+RvLeverage - There may be a few points with larger leverage here.
+
+Overall, I will review this with Erika, but I'm going to proceed anyways.
+
+I can move onto my tests
+
+```{r}
+anova(WCmodel)
+```
+
+Here I see that there is a significant association between temperature and chlorphyll.
+
+Let's dig in further.
+
+```{r}
+summary(WCmodel)
+```
+
+From this I see that the y-intercept is 19.7281 and the slope is 1.7325. The adjusted R2 is 0.3769, which means that about 37.69% of the variation in chlorophyll is associated with temperature (pretty good for a field test).
+
+#### Final plot
+
+Let's get a nicer looking plot
+
+```{r}
+ggplot(WC, aes(Temperature, Chlorophyll))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ggtitle("Comparing Temp and Chl in Water Chestnut")+
+  labs(x = "Temperature in Degrees Celsius", y = "Chlorophyll (μg/L)")+
+  theme_bw()+
+  theme(
+    axis.title.x=element_text(colour="blue", size=rel(1)), # adjust colour and size of x-axis title
+    axis.title.y=element_text(colour="darkgreen", size=rel(1)), # adjust colour and size of x-axis title
+      )
+```
+
+##### Results statement
+
+There is a statistically significant and positive association between tail length and body length in bats (F~1, 295~ = 180.01, p = \<\<\< 0.001, R^2^ = 0.3769).
