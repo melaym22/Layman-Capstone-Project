@@ -9,7 +9,9 @@ editor: visual
 
 CAPDAP "Rough Draft" Project 11/22/2024
 
-Workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+In this document, I will explore the relationship between time (specifically day vs night) and dissolved oxygen saturation from the data file "CAPDAP_WC_4Analysis.csv."
+
+I will use the following workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
 
 start with a clean environment and package installation
 

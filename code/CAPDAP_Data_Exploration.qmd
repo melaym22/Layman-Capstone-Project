@@ -21,26 +21,84 @@ library(ggfortify)
 WC <- read.csv(here("data", "CAPDAP_CleanLog_Final copy.csv"))
 ```
 
-a.     Check your data for mistakes and outliers. If there are outliers, decide what you will do with them and provide a justification for your choice and then take whatever action you need to deal with them.
+## a. Check your data for mistakes and outliers. If there are outliers, decide what you will do with them and provide a justification for your choice and then take whatever action you need to deal with them.
 
-fix data types
-
-```{r}
-WC$Site_Type <- as.factor(WC$Site_Type)
-WC$Date<-mdy(WC$Date)
-WC$Time<-hms(WC$Time)
-  
-```
-
-check levels
+lets look at some histograms of pH, DO and Chl data to see the overall frequency of values
 
 ```{r}
-levels(WC$Site_Type)
+ggplot(WC,
+  aes(pH))+
+    geom_histogram()+
+    theme_bw()
 ```
 
-no issues here so no need to alter factor data
+examining this, there is a left distribution of the data, centered around 7.1/7.2 and an outlier above 7.6 there is one really high point beyond 7.6 pH - i'll investigate
 
-check plots
+```{r}
+View(head(WC))
+```
+
+conductivity and DO values taken at this time also seem odd - this likely could have been cause by an issue with the hydrolab so I'm going to take this point out.
+
+```{r}
+WC <- WC %>%
+  filter(pH<7.5)
+```
+
+this got rid of one observation
+
+let's check again
+
+```{r}
+ggplot(WC,
+  aes(pH))+
+    geom_histogram()+
+    theme_bw()
+```
+
+no further concerns with pH
+
+lets look at the distribution of DO data
+
+```{r}
+ggplot(WC,
+  aes(Dissolved_Oxygen_Saturation))+
+    geom_histogram()+
+    theme_bw()
+```
+
+looks like there are two peaks in the data around 55 and 70, some one-off values in the high 70s, but no dramatic gaps in the data
+
+now lets look at the Chlorophyll data
+
+```{r}
+ggplot(WC,
+  aes(Chlorophyll))+
+    geom_histogram()+
+    theme_bw()
+```
+
+one large outlier - likely an issue with a lab sensor, so I'm going to remove the point
+
+```{r}
+WC <- WC %>%
+  filter(Chlorophyll<10)
+```
+
+this got rid of one more observation
+
+let's check again
+
+```{r}
+ggplot(WC,
+  aes(Chlorophyll))+
+    geom_histogram()+
+    theme_bw()
+```
+
+This data set has a more normal distribution of data, with a few spare points in the range above 4. However, I do think that these are genuinely recorded data points despite them being outliers.
+
+now, I'll plot anticipated results of my analysis
 
 ```{r}
 ggplot(WC,
@@ -49,38 +107,64 @@ ggplot(WC,
     theme_bw()
 ```
 
-one outlier - this was definitely an issue with a lab sensor, so I'm going to remove the point
+There are no more wild outliers of concern here. I won't start any analysis, but it is interesting to see these variables plotted against one another.
 
+to plot time, I'm going to need to change my data types, so I'll do all of that now while i'm here
+
+fix data types
 ```{r}
-WC <- WC %>%
-  filter(Chlorophyll<10)
+WC$Site_Type <- as.factor(WC$Site_Type)
+
+WC$Date<-mdy(WC$Date)
+WC$Time<-hms(WC$Time)
+View(WC)
 ```
+The time values are only going up to 12:59, but I want them to written in military time. Recruiting Erika's help here.
+
 
 ```{r}
-ggplot(WC,
-  aes(x=Time, y=pH))+
+ggplot(WC,aes(x=Time, y=pH))+
     geom_point()+
-    coord_flip()+
+    scale_x_time()+
     theme_bw()
 ```
 
-there is one really high point beyond 7.6 pH - i'll investigate
+Again, there are no more wild outliers of concern here and I won't start any analysis, but it is interesting to see these variables plotted against one another, and this reminds me that I have an issue with my time scale!
 
-the other values taken at this time also seem odd - this likely could have been cause by an issue with the hydrolab so I'm going to take this point out.
+
+check levels of factor data
 
 ```{r}
-WC <- WC %>%
-  filter(pH<7.5)
-  
+levels(WC$Site_Type)
 ```
 
-much better
+no issues here so no need to alter factor data
 
-b.     Change any of the variable names or create new variables that you will eventually need for your data analysis.
 
-N/A
+## b.     Change any of the variable names or create new variables that you will eventually need for your data analysis.
+I'm going to add one new variable to use in my data analysis
 
-c.     Write code to save the cleaned, revised dataset in your Data folder with a clear name indicating that it is the version to use in future analysis.
+use mutate () to create a new column that has the complete time stamp for each observation called "MDY_HMS"
+```{r}
+WC<-WC%>%
+  mutate(
+   MDY_HMS = c(WC$Date+WC$Time)
+  )
+```
+
+change variable names 
+```{r}
+WC<-WC%>%
+  mutate(
+   Temperature = WC$Temperature_C,
+   Temperature_C=NULL,
+   DO = WC$Dissolved_Oxygen_Saturation,
+   Dissolved_Oxygen_Saturation=NULL
+  )
+```
+
+
+## c.     Write code to save the cleaned, revised dataset in your Data folder with a clear name indicating that it is the version to use in future analysis.
 
 ```{r}
 write.csv(WC,here("data", "CAPDAP_WC_4Analysis.csv"),row.names=FALSE)
@@ -89,7 +173,7 @@ WC2<-read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
 
 i will use "CAPDAP_WC_4Analysis.csv" in my future analysis
 
-d.     Perform exploratory data analysis as we discussed in class for the data in your project (hint: summary statistics, plots…)
+## d.     Perform exploratory data analysis as we discussed in class for the data in your project (hint: summary statistics, plots…)
 
 ```{r}
 summary(WC2)
@@ -98,35 +182,50 @@ summary(WC2)
 returns basic summary, but not intuitively informative, let's see the plots
 
 ```{r}
-ggplot(WC,
-  aes(x=Time, y=Dissolved_Oxygen_Saturation))+
+WC2$Site_Type<- as.factor(WC$Site_Type)
+WC2$Date<-mdy(WC$Date)
+WC2$Time<-hms(WC$Time)
+ggplot(WC2,
+  aes(x=Time, y=DO))+
     geom_point()+
+    scale_x_time()+
     theme_bw()
 ```
 
-I'm not sure exactly how to analyze a time analysis, but It looks like there are a series of DO values below 25 occuring on a regular interval of time (about every 3,000 minutes? i'm unsure of this unit)
+I'm not sure exactly how to analyze a time analysis, but It looks like there are a series of DO values at 0 occuring on about every hour, but I anticipate that my analysis will change once the time scale adjusts, and I will look for more patterns during day vs night with that plotted. 
+
 
 ```{r}
 ggplot(WC,
   aes(x=pH, y=Chlorophyll))+
     geom_point()+
     theme_bw()
-
-model_WC <- lm(Chlorophyll~ pH,data=WC)
-model_WC
-
-autoplot(model_WC)
-
 ```
 
-a linear model is appropriate, there is normality, there is even distribution, and the residuals do not seem to have heavy leverage.
 
-based on the scatterplot, I would expect (7.25-6.45)/(5.2-1.8)=0.8/3.4=0.235 to be the slope and the y intercept to be around -1 to 1.
+
+
+
+
+
+test for Erika
 
 ```{r}
-summary(model_WC)
+WC<-WC%>%
+    mutate(
+      Site_Num = NULL,
+      Site_Type=NULL,
+      Date=NULL,
+      Temperature_C=NULL,
+      pH=NULL,
+      Conductivity=NULL,
+      Dissolved_Oxygen_Volume=NULL,
+      Chlorophyll=NULL,
+      MDY_HMS=NULL,
+      timealtered = hms(WC$Time))%>%
+        head(WC,n=15)
+    
+
+write.csv(WC,here("data", "Time_EG"),row.names=FALSE)
+WC3<-read.csv(here("data", "Time_EG"))
 ```
-
-the slope is -0.2373 and the y intercept is 4.5830.
-
-i'm not completely sure why the y int is so high if there is a negative slope. without getting too far ahead, the adj r\^2 value is onyl 0.00349, so maybe this model is just not fit for the data. I will investigate further in the next steps.

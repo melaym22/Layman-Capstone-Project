@@ -9,9 +9,11 @@ editor: visual
 
 CAPDAP "Rough Draft" Project 11/22/2024
 
-Workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+In this document, I will explore the relationship between chlorophyll and temperature from the data file "CAPDAP_WC_4Analysis.csv."
 
-start with a clean environment and package installation
+I will use the following workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+
+starting with a clean environment and package installation
 
 ```{r}
 rm (list = ls())
@@ -21,13 +23,13 @@ library(ggfortify)
 library(multcomp)
 ```
 
-read in the data
+next, I'll read in the data
 
 ```{r}
 WC<- read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
 ```
 
-let's alter the data types
+then I'll alter necessary data types
 
 ```{r}
 WC$Site_Type <- as.factor(WC$Site_Type)
