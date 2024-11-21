@@ -5,7 +5,7 @@ format: html
 editor: visual
 ---
 
-## Preliminary Data Analysis- Linear Regression
+## Preliminary Data Analysis: Linear Regression
 
 CAPDAP "Rough Draft" Project 11/22/2024
 
