@@ -1,0 +1,41 @@
+---
+title: "prelim analysis feedback"
+format: html
+editor: visual
+---
+
+## Preliminary Analysis Feedback
+
+### Chlorophyll and water temperature
+
+-   Line 40 - What is your alternative hypothesis? Is there some biology you can invoke to explain why you might expect there to be a relationship?
+
+-   Line 52 - very nice work guesstimating relationship!
+
+-   Line 81 - I agree with your assessment. The data do appear to be pretty normal. The resids vs. fitted and scale-location are a bit wonky, and it might make sense to try a polynomial model here (vs. linear) but that is pretty beyond the scope of this course, so I'm fine with you sticking with it as is. If you want to experiment with a polynomial model, feel free, but do it as a separate, additional analysis.
+
+-   Line 95 - I agree that your R2 is good. And it makes sense - when it is cold, plant machinery will work more slowly so there will be less chlorophyll.
+
+-   line 99 - I love your creativity with using color on x and y axis labels! I might even call x "Water temperature" in which case the blue makes even more sense. However, please be advised that a person with a visual impairment might not be able to see that distinction, so it is always a good idea to make sure that the way you create a plot doesn't privilge certain viewers in order to glean information.
+
+-   Line 116 - good, but now that we've tackled how to do the stats, let's also roll the biology back in. Does this outcome make biological sense? Add a sentence or two about the biology.
+
+#### I just realized you have two linear regression .qmd files in your project! My comments above go with the one called "Data_Analysis_Linear_Regression.qmd". Please get rid of the other one so as to remove confusion. I see that you also have two time series files - let's just have one of each.
+
+### Time Series
+
+-   Line 40 - Again, I'm going to want both null and alternative hypotheses with biological basis for alt.
+
+-   I'M SO HAPPY AT HOW MUCH YOU DUG AROUND TRYING TO FIGURE OUT TIME SERIES! You'll (perhaps) be happy to know that all I'm going to ask of you for time series is that you learn to plot a moving average - I have written a lot of code in the Cap-DAP-Examples github repo that should help a lot with this.
+
+Learning the stats to actually try to test for stationarity and seasonality is a bit too much for this course. But I'm glad that in googling around, you figured out a few things.
+
+Last note: You were having some trouble getting dmy-hms in your data. Here's one approach:
+
+```{r}
+WC$DateTime <- with(WC, Date + Time) #if Date and Time were not already time objects, you'd need to use lubridate to make them, as below:
+
+#WC$DateTime <- with(WC, ymd(Date)+ hms(Time))
+```
+
+Since you won't be doing a formal time series analysis, you could push yourself to see if, on your final plot showing the moving average of chlorophyll, you could shade the "night" part of the figure background dark and the "day" parts light and maybe do something like put in a vertical line indicating when the hurricane started.
