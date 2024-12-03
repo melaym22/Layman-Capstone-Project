@@ -120,19 +120,18 @@ Also after 100 the DO does not go below 40 again. This is crucial and likely tel
 
 I know that in my next steps I will need to:
 
-## create a model 
+## create a model
 
 I'll make a clean TS object
 
-## check my model's assumptions. 
+## check my model's assumptions.
 
 TS Assumptions include
 
 -   **Stationarity:** Whether the time series has a constant mean and variance over time. 
 
-```{=html}
 <!-- -->
-```
+
 -   **Autocorrelation:** Whether there is significant correlation between observations at different time lags. 
 
 -   **Normality of residuals:** Whether the residuals (errors) from the model follow a normal distribution. .
@@ -145,9 +144,8 @@ To assess this, I can:
 
 -   Plot the residuals to check for patterns or non-normality. 
 
-```{=html}
 <!-- -->
-```
+
 -   Use statistical tests like the Dickey-Fuller test to check for stationarity. 
 
 -   Apply tests for autocorrelation (e.g., Breusch-Godfrey test) 
