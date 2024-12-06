@@ -39,6 +39,8 @@ WC$Time<-hms(WC$Time)
 
 My null hypothesis is that there is no relationship between chlorophyll and temperature in my Water Chestnut data.
 
+My alternative hypothesis is that chlorophyll levels are positively correlated with water temperature. Warmer water temperatures are indicative of recent sunlight which suggests that more photosynthesis is processed in the river, resulting in more chlorophyll. 
+
 To test this, I'll first plot this proposed relationship (two continutous variables) using a scatterplot, and will later run a linear regression.
 
 ```{r}
@@ -76,7 +78,7 @@ Scale Location - this is a bit concerning, it indicates that there is an unevenn
 
 RvLeverage - There may be a few points with larger leverage here.
 
-Overall, I will review this with Erika, but I'm going to proceed anyways.
+Overall, a polynomial model may fit this scenario better, but for now, I'm going to proceed with the linear model
 
 I can move onto my tests
 
@@ -103,7 +105,7 @@ ggplot(WC, aes(Temperature, Chlorophyll))+
   geom_point()+
   geom_smooth(method = "lm")+
   ggtitle("Comparing Temp and Chl in Water Chestnut")+
-  labs(x = "Temperature in Degrees Celsius", y = "Chlorophyll (μg/L)")+
+  labs(x = "Water Temperature in Degrees Celsius", y = "Chlorophyll (μg/L)")+
   theme_bw()+
   theme(
     axis.title.x=element_text(colour="blue", size=rel(1)), # adjust colour and size of x-axis title
@@ -113,4 +115,8 @@ ggplot(WC, aes(Temperature, Chlorophyll))+
 
 ##### Results statement
 
-There is a statistically significant and positive association between tail length and body length in bats (F~1, 295~ = 180.01, p = \<\<\< 0.001, R^2^ = 0.3769).
+There is a statistically significant and positive association between temperature and chlorophyll in the Oswegatchie River (F~1, 295~ = 180.01, p = \<\<\< 0.001, R^2^ = 0.3769).
+
+This makes sense! When it is cold, the plant machinery slows down, resulting in less chlorophyll in the water.
+
+

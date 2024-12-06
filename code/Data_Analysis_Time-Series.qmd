@@ -37,14 +37,28 @@ WC$Date<-ymd(WC$Date)
 WC$Time<-hms(WC$Time)
 ```
 
+Here, I'm going to make a new variable called DateTime, which will combine date and time to ensure a 24 hour timeline over 
+```{r}
+WC$DateTime <- with(WC, Date + Time) 
+```
+
 My null hypothesis is that there is no relationship between Time of Day and Dissolved Oxygen Saturation in my Water Chestnut data.
+
+My alternative hypothesis is that overnight, due to less photosynthesis and therefore less oxygen produced, dissolved oxygen values would drop. 
 
 To test this, I'll first plot this proposed relationship (time vs a continuous variable) using a scatterplot, and will later run a time series analysis.
 
 ```{r}
-ggplot(WC,aes(x=Time,y=DO))+
+ggplot(WC,aes(x=DateTime,y=DO))+
   geom_point()+
-  scale_x_time()+
+  scale_x_datetime(
+    name = "Date/Time",
+    date_breaks = "48 hours",
+    date_labels = waiver(),
+    minor_breaks = "6 hours",
+    position = "bottom",
+    sec.axis = waiver()
+    )+
   theme_bw()
 ```
 
@@ -165,8 +179,8 @@ Other tests include **Kwiatkowski-Phillips-Schmidt-Shin (KPSS) test for stationa
 I'm going to try to make a nicer plot to recap, although I think my best test was from plot.ts(DF), and I cannot use ggplot functions with that, so I will try to adjust my original ggplot model
 
 ```{r}
-ggplot(WC,aes(x=Time,y=DO, colour = Site_Type))+
-  geom_point()+
+ggplot(WC,aes(x=DateTime,y=DO))+
+  geom_point(aes(fill=Site_Type), colour="black", shape=21,fill=WC$Site_Type, size=1.5)+
   ggtitle("Comparing Time and DO in Water Chestnut")+
   labs(x = "Time from 07/08/2024 to 07/14/2024", y = "Dissolved Oxygen Saturation (%)")+
   theme_bw()+
@@ -174,8 +188,10 @@ ggplot(WC,aes(x=Time,y=DO, colour = Site_Type))+
     axis.title.x=element_text(colour="blue", size=rel(1)), # adjust colour and size of x-axis title
     axis.title.y=element_text(colour="darkgreen", size=rel(1)), # adjust colour and size of x-axis title
     scale_colour_manual(values=c(Green="green", Red="red")) # customizes colors to each group wiht layering
+    
  )
 ```
+ s
 
 ## Below is a bunch of problem-solving that didn't end up being helpful, but I thought I would include anyway to show my thought processes
 
