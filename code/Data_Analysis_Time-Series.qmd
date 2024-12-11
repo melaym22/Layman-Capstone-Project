@@ -5,13 +5,13 @@ format: html
 editor: visual
 ---
 
-## Preliminary Data Analysis: Time Series Test
+# Preliminary Data Analysis: Time Series Test
 
 CAPDAP Final Project 12/19/2024
 
 In this document, I will explore the relationship between time and dissolved oxygen saturdation from the data file "CAPDAP_WC_4Analysis.csv."
 
-I will use the following workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+Instead of running a statistical analysis with time series, I am going to make a final plot for visual analysis of my data
 
 starting with a clean environment and package installation
 
@@ -84,293 +84,37 @@ WC$sma1 <- as.numeric(WC_O2)
 Now we can plot
 
 ```{r}
+hurricane <- data.frame(X=c(WC$DateTime[37],WC$DateTime[225]), Y = 100)
+night1 <- data.frame(X=c(WC$DateTime[10],WC$DateTime[18]), Y = 3)
+night2 <- data.frame(X=c(WC$DateTime[34],WC$DateTime[42]), Y = 3)
+night3 <- data.frame(X=c(WC$DateTime[58],WC$DateTime[66]), Y = 3)
+night4 <- data.frame(X=c(WC$DateTime[82],WC$DateTime[90]), Y = 3)
+night5 <- data.frame(X=c(WC$DateTime[106],WC$DateTime[113]), Y = 3)
+night6 <- data.frame(X=c(WC$DateTime[129],WC$DateTime[137]), Y = 3)
+
+
 o_sma1 <-ggplot(WC, aes(x =DateTime))+
-  geom_line(aes(y = DO), color = "blue", size = 0.3) + #original time series
-  geom_line(aes(y = sma1), color = "red", size = 0.2) + #moving average
+  geom_line(aes(y = sma1), color = "black", size = 0.2) + #moving average
+  geom_vline(xintercept=WC$DateTime[37],linetype=4)+ #indicates start of hurricane
+  geom_vline(xintercept=WC$DateTime[225],linetype=4)+ #indicates end of hurricane
+  geom_area(aes(x=X,y=Y),data=hurricane,alpha=0.2,fill="red")+
+  geom_vline(xintercept=WC$DateTime[10:18],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[34:42],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[58:66],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[82:90],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[106:113],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[129:137],linetype=3, alpha=0.5, colour = "blue")+
+
+
+  geom_area(aes(x=X,y=Y),data=night1,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night2,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night3,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night4,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night5,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night6,alpha=0.7,fill="blue")+
   labs(title = "Dissolved Oxygen during Hurricane Beryl", x = "Time", y = "Percent DO")+
-  theme_bw()
-o_sma1
-```
-
-#### 
-
-CAPDAP "Rough Draft" Project 11/22/24
-
-In this document, I will explore the relationship between time (specifically day vs night) and dissolved oxygen saturation from the data file "CAPDAP_WC_4Analysis.csv."
-
-I will use the following workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
-
-start with a clean environment and package installation
-
-```{r}
-rm (list = ls())
-library(tidyverse)
-library(here)
-library(ggfortify)
-library(multcomp)
-```
-
-read in the data
-
-```{r}
-WC<- read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
-```
-
-let's alter the data types
-
-```{r}
-WC$Site_Type <- as.factor(WC$Site_Type)
-WC$Date<-ymd(WC$Date)
-WC$Time<-hms(WC$Time)
-```
-
-Here, I'm going to make a new variable called DateTime, which will combine date and time to ensure a 24 hour timeline over
-
-```{r}
-WC$DateTime <- with(WC, Date + Time) 
-```
-
-My null hypothesis is that there is no relationship between Time of Day and Dissolved Oxygen Saturation in my Water Chestnut data.
-
-My alternative hypothesis is that overnight, due to less photosynthesis and therefore less oxygen produced, dissolved oxygen values would drop.
-
-To test this, I'll first plot this proposed relationship (time vs a continuous variable) using a scatterplot, and will later run a time series analysis.
-
-```{r}
-ggplot(WC,aes(x=DateTime,y=DO))+
-  geom_point()+
-  scale_x_datetime(
-    name = "Date/Time",
-    date_breaks = "48 hours",
-    date_labels = waiver(),
-    minor_breaks = "6 hours",
-    position = "bottom",
-    sec.axis = waiver()
-    )+
-  theme_bw()
-```
-
-First, I want to think about the time values intuitively. In July, when this data was collected, the sun was up from around 6:00am until 8:00pm and it was dark from 8:00pm to 6:00am. When there is sunlight, the plants in the water will be able to undergo photosynthesis, producing more oxygen, and releasing it into the water. Therefore, I expect the day time values to be positively correlated with oxygen content.
-
-i need to learn more about time series
-
-```{r}
-?ts()
-```
-
-here, I learned that a time series object looks likes ts(data, start, end, frequency)
-
-```{r}
-DF<-as.ts(WC)
-View(DF)
-```
-
-This just deleted my time values and changed my dates to a different format.
-
-```{r}
-WC2<-WC%>%
-    mutate(
-      Time=NULL,
-      Temperature=NULL,
-      Site_Num = NULL,
-      Site_Type=NULL,
-      Date=NULL,
-      Temperature_C=NULL,
-      pH=NULL,
-      Conductivity=NULL,
-      Dissolved_Oxygen_Volume=NULL,
-      Chlorophyll=NULL)
-DF<-as.ts(WC2)
-View(DF)
-```
-
-This might have worked?? I don't know how to ensure that the data is in order though since MDY_HMS no longer has values. Let's try plotting it
-
-```{r}
-plot.ts(DF)
-```
-
-Well we got something for sure! But this tells me that MDY_HMS is being treated as a response variable, so I want to try again without this variable.
-
-```{r}
-WC3<-WC%>%
-    mutate(
-      Time=NULL,
-      Temperature=NULL,
-      Site_Num = NULL,
-      Site_Type=NULL,
-      Date=NULL,
-      Temperature_C=NULL,
-      pH=NULL,
-      Conductivity=NULL,
-      Dissolved_Oxygen_Volume=NULL,
-      Chlorophyll=NULL,
-      MDY_HMS=NULL)
-DF<-as.ts(WC3)
-plot.ts(DF)
-```
-
-Ahhh - this looks much more like the graphs I've seen before.
-
-One problem I see right away is the Time values are no longer in their units.
-
-So, I know intuitively that the plot is going from earliest to latest because it mirrors the graphs I have made in excel, but I need to see the units in the x axis to know if this is using all of the dates or is just over a 24 hour cycle.
-
-There are some patterns I notice, like a dip around 25, 45, 65, 85, 105, etc. So every 20ish...hours?
-
-Also after 100 the DO does not go below 40 again. This is crucial and likely tells us something about the hurricane. Maybe the DO had a crash into hypoxia/anoxia during the hurricane but appears to recover after... assuming the dates align with this hypothesis.
-
-I know that in my next steps I will need to:
-
-## create a model
-
-I'll make a clean TS object
-
-## check my model's assumptions.
-
-TS Assumptions include
-
--   **Stationarity:** Whether the time series has a constant mean and variance over time. 
-
-<!-- -->
-
--   **Autocorrelation:** Whether there is significant correlation between observations at different time lags. 
-
--   **Normality of residuals:** Whether the residuals (errors) from the model follow a normal distribution. .
-
-To assess this, I can:
-
--   Plot the time series data to check for trends or seasonality. 
-
--   Plot the ACF (Autocorrelation Function) and PACF (Partial Autocorrelation Function) to assess autocorrelation. 
-
--   Plot the residuals to check for patterns or non-normality. 
-
-<!-- -->
-
--   Use statistical tests like the Dickey-Fuller test to check for stationarity. 
-
--   Apply tests for autocorrelation (e.g., Breusch-Godfrey test) 
-
--   Conduct normality tests on residuals (e.g., Shapiro-Wilk test). 
-
-## run statistical model + interpret the model/relationships
-
-From what I have found, a lot of time series analysis is about looking for patterns.
-
-It was suggested to again run an Augmented Dickey–Fuller Test, `adf.test` , which can return a p value for measuring statistical significant.
-
-Other tests include **Kwiatkowski-Phillips-Schmidt-Shin (KPSS) test for stationarity, Mann-Kendall trend test for identifying trends, and autocorrelation function (ACF) analysis**
-
-## replot the model to show key relationships
-
-I'm going to try to make a nicer plot to recap, although I think my best test was from plot.ts(DF), and I cannot use ggplot functions with that, so I will try to adjust my original ggplot model
-
-```{r}
-ggplot(WC,aes(x=DateTime,y=DO))+
-  geom_point(aes(fill=Site_Type), colour="black", shape=21,fill=WC$Site_Type, size=1.5)+
-  ggtitle("Comparing Time and DO in Water Chestnut")+
-  labs(x = "Time from 07/08/2024 to 07/14/2024", y = "Dissolved Oxygen Saturation (%)")+
   theme_bw()+
-  theme(
-    axis.title.x=element_text(colour="blue", size=rel(1)), # adjust colour and size of x-axis title
-    axis.title.y=element_text(colour="darkgreen", size=rel(1)), # adjust colour and size of x-axis title
-    scale_colour_manual(values=c(Green="green", Red="red")) # customizes colors to each group wiht layering
-    
- )
-```
-
-s
-
-## Below is a bunch of problem-solving that didn't end up being helpful, but I thought I would include anyway to show my thought processes
-
-"**each column represents a separate time series variable, and each row represents a single time point, with the rows ordered chronologically"**
-
-it seems as though time series will only analyze vector or matrix data, so i'll need to transform my data
-
-Okay, I'm getting lost here... lets see if the internet can help me figure out how to setup my data
-
-I need to "store the data in a time series object in R"
-
-```{r}
-WC$MDY_HMS[1]
-WC$MDY_HMS[nrow(WC)]
-WCTS <- ts(ts=WC$dateTime, start=WC$MDY_HMS[1], end=WC$MDY_HMS[nrow(WC)])
-```
-
-this isn't working, I think because the time on the end date is earlier than the start date's time. let's try something else
-
-"Here's how to use the `ts()` function in base `R` (assuming your data `X` are contained in the data frame `dat`). You'll need to specify the first year and hour for `start` (you don't need `end`), and `frequency` will be the number of hours in a year."
-
-```{r}
-firstHour <- 24*(as.Date("2024-07-08 12:47:00")-as.Date("2024-07-14 04:13:25"))
-tt <- ts(WC$MDY_HMS,start=c(2024,firstHour),frequency=24*365)
-View(tt)
-```
-
-I think this worked? I can't see much in the tt object
-
-Let's try plotting it
-
-```{r}
-plot.ts(tt)
-```
-
-Okay clearly didn't work.
-
-Back to the internet... They say:
-
-Step 1: You need to concatenate Date and Hour columns in POSIXct format:
-
-```         
-df$Date <- as.POSIXct(paste(df$Date, df$Time))
-```
-
-Step 2: As this data is hourly time series, you should convert it in xts object as xts handles hourly data better than ts. order.by is the value of your column that has time observations.
-
-```         
-df <- as.xts(df, order.by = df$Date)
-```
-
-```{r}
-library(xts)
-library(zoo)
-WCcopy<- WC
-WCcopy$Date1 <- as.POSIXct(paste(WC$Date, WC$Time))
-View(WCcopy)
-```
-
-"I would use `zoo` package and specialy handy function `read.zoo` to create the time series."
-
-```{r}
-?read.zoo()
-## if you have a file input replace text= by filename
-x.zoo <- read.zoo(here("data", "CAPDAP_WC_4Analysis.csv"),tz="",)
-
-as.ts(x.zoo)
-```
-
-Okay, I'm lost here and definitely need help getting my data from its current state to a time series object.
-
-some more fumbling around:
-
-```{r}
-WC2<-WC%>%
-    mutate(
-      Time=NULL,
-      Temperature=NULL,
-      Site_Num = NULL,
-      Site_Type=NULL,
-      Date=NULL,
-      Temperature_C=NULL,
-      pH=NULL,
-      Conductivity=NULL,
-      Dissolved_Oxygen_Volume=NULL,
-      Chlorophyll=NULL)
-View(WC2)
-
-wc.mat <- xtabs(cbind(WC2$DO, WC$MDY_HMS), data = WC2)
-wc.mat
-?xtabs()
-?cbind()
+  geom_label(aes(x = WC$DateTime[115], y = 10, label = "Vertical Bars = Night"), fill = "lightblue")+
+  geom_label(aes(x = WC$DateTime[57], y = 96, label = "Active Hurricane Beryl"), fill = "red")
+o_sma1
 ```
