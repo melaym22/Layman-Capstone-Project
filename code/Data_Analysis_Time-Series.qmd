@@ -7,6 +7,93 @@ editor: visual
 
 ## Preliminary Data Analysis: Time Series Test
 
+CAPDAP Final Project 12/19/2024
+
+In this document, I will explore the relationship between time and dissolved oxygen saturdation from the data file "CAPDAP_WC_4Analysis.csv."
+
+I will use the following workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+
+starting with a clean environment and package installation
+
+```{r}
+rm (list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(multcomp)
+library(forecast) #for moving averages
+library(gridExtra) #to arrange plots
+library(zoo) # for moving averages
+```
+
+read in the data
+
+```{r}
+WC<- read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
+```
+
+let's alter the data types
+
+```{r}
+WC$Site_Type <- as.factor(WC$Site_Type)
+WC$Date<-ymd(WC$Date)
+WC$Time<-hms(WC$Time)
+WC$DateTime <- with(WC, Date + Time) 
+```
+
+My null hypothesis is that there is no relationship between Time of Day and Dissolved Oxygen Saturation in my Water Chestnut data.
+
+My alternative hypothesis is that overnight, due to less photosynthesis and therefore less oxygen produced, dissolved oxygen values would drop.
+
+## In this project, I'll analyze time as a moving average
+
+A moving average is a method for analyzing data points by creating a series of averages of different subsets of the data. A *simple moving average* averages together data points over a specified number of time periods.
+
+#### Create time series object
+
+First, I'll create a *time series object* using the `ts()` function which comes with base R.
+
+```{r}
+WC_O2 <- WC$DO
+
+WC_O2 <- ts(WC_O2, frequency = 24, 
+                start = c(2024,7) #indicates that the data begin in Jan 2023
+                )
+```
+
+#### Calculate the simple moving average
+
+Now let's use the `rollmean()` function from the `zoo` package to caluclate a simple moving average.
+
+```{r}
+WC_sma1 <- rollmean(WC_O2, 
+                      #first argument is the time series object
+                      k = 7, #k specifies the integer width of the rolling window and must be an odd number. Let's start with 29 days
+                      fill = NA #fill pads the resulting series with NA values at the start and stop where the moving average cannot be computed
+                      )
+```
+
+#### Now plot the time series along with its moving average
+
+First, we need to add our moving average to our data frame for plotting. It should also be numeric and not a time-series object.
+
+```{r}
+WC$sma1 <- as.numeric(WC_O2)
+```
+
+Now we can plot
+
+```{r}
+o_sma1 <-ggplot(WC, aes(x =DateTime))+
+  geom_line(aes(y = DO), color = "blue", size = 0.3) + #original time series
+  geom_line(aes(y = sma1), color = "red", size = 0.2) + #moving average
+  labs(title = "Dissolved Oxygen during Hurricane Beryl", x = "Time", y = "Percent DO")+
+  theme_bw()
+o_sma1
+```
+
+#### 
+
 CAPDAP "Rough Draft" Project 11/22/24
 
 In this document, I will explore the relationship between time (specifically day vs night) and dissolved oxygen saturation from the data file "CAPDAP_WC_4Analysis.csv."
@@ -37,14 +124,15 @@ WC$Date<-ymd(WC$Date)
 WC$Time<-hms(WC$Time)
 ```
 
-Here, I'm going to make a new variable called DateTime, which will combine date and time to ensure a 24 hour timeline over 
+Here, I'm going to make a new variable called DateTime, which will combine date and time to ensure a 24 hour timeline over
+
 ```{r}
 WC$DateTime <- with(WC, Date + Time) 
 ```
 
 My null hypothesis is that there is no relationship between Time of Day and Dissolved Oxygen Saturation in my Water Chestnut data.
 
-My alternative hypothesis is that overnight, due to less photosynthesis and therefore less oxygen produced, dissolved oxygen values would drop. 
+My alternative hypothesis is that overnight, due to less photosynthesis and therefore less oxygen produced, dissolved oxygen values would drop.
 
 To test this, I'll first plot this proposed relationship (time vs a continuous variable) using a scatterplot, and will later run a time series analysis.
 
@@ -191,7 +279,8 @@ ggplot(WC,aes(x=DateTime,y=DO))+
     
  )
 ```
- s
+
+s
 
 ## Below is a bunch of problem-solving that didn't end up being helpful, but I thought I would include anyway to show my thought processes
 

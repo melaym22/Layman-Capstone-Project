@@ -112,15 +112,16 @@ There are no more wild outliers of concern here. I won't start any analysis, but
 to plot time, I'm going to need to change my data types, so I'll do all of that now while i'm here
 
 fix data types
+
 ```{r}
 WC$Site_Type <- as.factor(WC$Site_Type)
-
 WC$Date<-mdy(WC$Date)
-WC$Time<-hms(WC$Time)
-View(WC)
-```
-The time values are only going up to 12:59, but I want them to written in military time. Recruiting Erika's help here.
+WC$Time<-parse_time(WC$Time, '%H:%M:%S %p')
+WC$DateTime <- with(WC, Date + Time)
 
+```
+
+The time values are only going up to 12:59, but I want them to written in military time. Recruiting Erika's help here.
 
 ```{r}
 ggplot(WC,aes(x=Time, y=pH))+
@@ -131,7 +132,6 @@ ggplot(WC,aes(x=Time, y=pH))+
 
 Again, there are no more wild outliers of concern here and I won't start any analysis, but it is interesting to see these variables plotted against one another, and this reminds me that I have an issue with my time scale!
 
-
 check levels of factor data
 
 ```{r}
@@ -140,11 +140,12 @@ levels(WC$Site_Type)
 
 no issues here so no need to alter factor data
 
-
 ## b.     Change any of the variable names or create new variables that you will eventually need for your data analysis.
+
 I'm going to add one new variable to use in my data analysis
 
 use mutate () to create a new column that has the complete time stamp for each observation called "MDY_HMS"
+
 ```{r}
 WC<-WC%>%
   mutate(
@@ -152,7 +153,8 @@ WC<-WC%>%
   )
 ```
 
-change variable names 
+change variable names
+
 ```{r}
 WC<-WC%>%
   mutate(
@@ -162,7 +164,6 @@ WC<-WC%>%
    Dissolved_Oxygen_Saturation=NULL
   )
 ```
-
 
 ## c.     Write code to save the cleaned, revised dataset in your Data folder with a clear name indicating that it is the version to use in future analysis.
 
@@ -185,6 +186,9 @@ returns basic summary, but not intuitively informative, let's see the plots
 WC2$Site_Type<- as.factor(WC$Site_Type)
 WC2$Date<-mdy(WC$Date)
 WC2$Time<-hms(WC$Time)
+WC$DateTime <- with(WC, Date + Time) 
+
+
 ggplot(WC2,
   aes(x=Time, y=DO))+
     geom_point()+
@@ -192,8 +196,7 @@ ggplot(WC2,
     theme_bw()
 ```
 
-I'm not sure exactly how to analyze a time analysis, but It looks like there are a series of DO values at 0 occuring on about every hour, but I anticipate that my analysis will change once the time scale adjusts, and I will look for more patterns during day vs night with that plotted. 
-
+I'm not sure exactly how to analyze a time analysis, but It looks like there are a series of DO values at 0 occuring on about every hour, but I anticipate that my analysis will change once the time scale adjusts, and I will look for more patterns during day vs night with that plotted.
 
 ```{r}
 ggplot(WC,
@@ -201,12 +204,6 @@ ggplot(WC,
     geom_point()+
     theme_bw()
 ```
-
-
-
-
-
-
 
 test for Erika
 
