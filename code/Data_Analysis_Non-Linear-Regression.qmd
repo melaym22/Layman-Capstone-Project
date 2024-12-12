@@ -1,0 +1,210 @@
+---
+title: "Preliminary_Data_Analysis-LinearRegression"
+author: "ML"
+format: html
+editor: visual
+---
+
+# Data Analysis: Linear Regression
+
+CAPDAP Final Project 12/18/2024
+
+In this document, I will explore the relationship between chlorophyll and temperature from the data file "CAPDAP_WC_4Analysis.csv."
+
+I will use the following workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+
+starting with a clean environment and package installation
+
+```{r}
+rm (list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(multcomp)
+```
+
+next, I'll read in the data
+
+```{r}
+WC<- read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
+```
+
+then I'll alter necessary data types
+
+```{r}
+WC$Site_Type <- as.factor(WC$Site_Type)
+WC$Date<-ymd(WC$Date)
+WC$Time<-hms(WC$Time)
+```
+
+My null hypothesis is that there is no relationship between chlorophyll and temperature in my Water Chestnut data.
+
+My alternative hypothesis is that chlorophyll levels are positively correlated with water temperature. Warmer water temperatures are indicative of recent sunlight which suggests that more photosynthesis is processed in the river, resulting in more chlorophyll.
+
+## Plot
+
+To test this, I'll first plot this proposed relationship (two continutous variables) using a scatterplot, and will later test a generalized linear model.
+
+```{r}
+ggplot(WC,aes(x=Temperature,y=Chlorophyll))+
+  geom_point()+
+  theme_bw()
+```
+
+There appears to be a strong positive relationship, indicating that as temperature increases, so does chlorophyll. There is some curve to the data, so I may want to consider using glm() rather than lm()
+
+I'll investigate the normality of my response variable
+
+```{r}
+ggplot(WC, aes(Chlorophyll))+
+  geom_histogram()+
+  theme_bw()
+```
+
+This has a slight right skew in the data, which further supports the use of glm()
+
+I'll plot the data and look to see how a linear vs. non-linear line fit the data.
+
+```{r}
+#1st just points
+ggplot(WC, aes(Chlorophyll, Temperature))+
+    geom_point()
+  
+#now lm 
+ggplot(WC, aes(Chlorophyll, Temperature))+
+  geom_point()+
+  geom_smooth(method = "lm", se = F) #plots linear relationshiop
+
+ggplot(WC, aes(Chlorophyll, Temperature))+
+  geom_point()+
+  geom_smooth(method = "lm", se = F)+ #plots linear relationshiop
+  geom_smooth(span = 1, color = "red", se = F)#adds non-linear curve
+
+```
+
+This doesn't seem to make that dramatic of a difference, but the curve may represent a few more data points. As a last check, I'll test the assumptions of both model types
+
+## Build the Models
+
+```{r}
+WC_lm <- lm(Chlorophyll~Temperature, data = WC)
+WC_glm <- glm(Chlorophyll ~ Temperature, data = WC, family = poisson)
+```
+
+## Check the model assumption
+
+```{r}
+autoplot(WC_lm)
+```
+
+Reviewing these charts, I would conclude:
+
+RvFit model - a little wave, linear model probably isn't "wrong," but could be improved
+
+Normal Q-Q - looks good, the right tail has some deviance from the line
+
+Scale Location - this is a bit concerning, it indicates that there is an unevenness in the residuals
+
+RvLeverage - There may be a few points with larger leverage here.
+
+Overall, a polynomial model may fit this scenario better, so I'll see how these plots compare.
+
+```{r}
+autoplot(WC_glm)
+```
+
+Reviewing these charts, I would conclude:
+
+RvFit model -the wave was slightly flattened, so maybe this model is more appropriate
+
+Normal Q-Q - again, the right tail has some deviance from the line, but overall better than the linear model
+
+Scale Location & RvLeverage - these look nearly identical to the linear model
+
+## Interpret the model
+
+Although it may not make a huge difference, I'm going to choose to test a non-linear model because it represents the data I want to test slightly better.
+
+```{r}
+anova(WC_glm)
+```
+
+The total deviance in the data is 34.743 and the deviance related to body size is 21.704 deviance units, so almost 2/3 of the variation in the data relates to temperature.
+
+We didn't get p-values. We need to specify the probability distribution in order to get them. With a typical glm, p values come from the Chi-square distribution. (note that we are not doing a chi-square test).
+
+So if we specify the distribution, we can get a p-value:
+
+```{r}
+anova(WC_glm, test = "Chisq")
+```
+
+Here I see that there is a significant association between temperature and chlorophyll.
+
+Let's dig in further.
+
+```{r}
+summary(WC_glm)
+```
+
+From this I see that the y-intercept is -0.71212 and the slope is 0.07174. The null deviance is 34.743 and the residual deviance is 21.704, so about 62.5% of the variation in chlorophyll is associated with temperature (really good for a field test).
+
+## Make a final plot
+
+We use `expand.grid()` to generate a set of "new x" values remembering to name the single column the same as in the original data set (`Temperature`)
+
+```{r}
+min.temp <- min(WC$Temperature)
+max.temp <- max(WC$Temperature)
+```
+
+Now make the new body size column
+
+```{r}
+new.x <- expand.grid(Temperature = seq(min.temp, max.temp,length = 1000))
+```
+
+Now generate fits and standard errors on the new.x variable
+
+```{r}
+new.y <- predict(WC_glm, newdata = new.x, se.fit = T)
+new.y <- data.frame(new.y)
+```
+
+Now bring them together into a new addThese
+
+```{r}
+addThese <- data.frame(new.x, new.y)
+```
+
+Now exponentiate the fitness and CI's to get back to the response variable scale (number of sheep)
+
+```{r}
+addThese <- mutate(addThese, 
+                   Chlorophyll = exp(fit),
+                   lwr = exp(fit - 1.96 * se.fit),
+                   upr = exp(fit + 1.96 * se.fit))
+head(addThese)
+```
+
+And now plot
+
+```{r}
+ggplot(WC, aes(Temperature, Chlorophyll))+
+  geom_point(size = 3, alpha = 0.5)+
+  #now add the fits and the CIs 
+  geom_smooth(data = addThese, aes(ymin = lwr, ymax = upr), stat = "identity")+
+  theme_bw()
+
+ggplot(WC, aes(Chlorophyll, Temperature))+
+  geom_point(size = 3, alpha = 0.5)+
+  geom_smooth(method = "lm", se = F)
+```
+
+This looks much better!
+
+## Results
+
+There is a positive association between temperature and chlorophyll in the Oswegatchie River (62.5% of the variation in chlorophyll is associated with temperature and ).
+
+This makes sense! When it is cold, the plant machinery slows down, resulting in less chlorophyll in the water.

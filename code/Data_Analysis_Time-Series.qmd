@@ -5,9 +5,9 @@ format: html
 editor: visual
 ---
 
-# Preliminary Data Analysis: Time Series Test
+# Data Analysis: Time Series Test
 
-CAPDAP Final Project 12/19/2024
+CAPDAP Final Project 12/18/2024
 
 In this document, I will explore the relationship between time and dissolved oxygen saturdation from the data file "CAPDAP_WC_4Analysis.csv."
 
@@ -41,7 +41,7 @@ WC$Time<-hms(WC$Time)
 WC$DateTime <- with(WC, Date + Time) 
 ```
 
-My null hypothesis is that there is no relationship between Time of Day and Dissolved Oxygen Saturation in my Water Chestnut data.
+My null hypothesis is that there is no relationship between Time of Day and Dissolved Oxygen Saturation in my Water Chestnut data or the Hurricane Timeline and Dissolved Oxygen Saturation.
 
 My alternative hypothesis is that overnight, due to less photosynthesis and therefore less oxygen produced, dissolved oxygen values would drop.
 
@@ -84,19 +84,23 @@ WC$sma1 <- as.numeric(WC_O2)
 Now we can plot
 
 ```{r}
-hurricane <- data.frame(X=c(WC$DateTime[37],WC$DateTime[225]), Y = 100)
 night1 <- data.frame(X=c(WC$DateTime[10],WC$DateTime[18]), Y = 3)
 night2 <- data.frame(X=c(WC$DateTime[34],WC$DateTime[42]), Y = 3)
 night3 <- data.frame(X=c(WC$DateTime[58],WC$DateTime[66]), Y = 3)
 night4 <- data.frame(X=c(WC$DateTime[82],WC$DateTime[90]), Y = 3)
 night5 <- data.frame(X=c(WC$DateTime[106],WC$DateTime[113]), Y = 3)
 night6 <- data.frame(X=c(WC$DateTime[129],WC$DateTime[137]), Y = 3)
+hurricane <- data.frame(X=c(WC$DateTime[12],WC$DateTime[225]), Y = 100)
+hypoxia <-   data.frame(X=c(WC$DateTime[149],WC$DateTime[148]), Y=20)
+
 
 
 o_sma1 <-ggplot(WC, aes(x =DateTime))+
   geom_line(aes(y = sma1), color = "black", size = 0.2) + #moving average
-  geom_vline(xintercept=WC$DateTime[37],linetype=4)+ #indicates start of hurricane
-  geom_vline(xintercept=WC$DateTime[225],linetype=4)+ #indicates end of hurricane
+  # geom_vline(xintercept=WC$DateTime[37],linetype=4)+ #indicates start of hurricane
+  # geom_vline(xintercept=WC$DateTime[225],linetype=4)+ #indicates end of hurricane
+  geom_hline(yintercept=20,linetype=2)+ #indicates hypoxia
+  geom_area(aes(x=X,y=Y),data=hypoxia,alpha=0.2,fill="brown")+
   geom_area(aes(x=X,y=Y),data=hurricane,alpha=0.2,fill="red")+
   geom_vline(xintercept=WC$DateTime[10:18],linetype=3, alpha=0.5, colour = "blue")+
   geom_vline(xintercept=WC$DateTime[34:42],linetype=3, alpha=0.5, colour = "blue")+
@@ -114,7 +118,15 @@ o_sma1 <-ggplot(WC, aes(x =DateTime))+
   geom_area(aes(x=X,y=Y),data=night6,alpha=0.7,fill="blue")+
   labs(title = "Dissolved Oxygen during Hurricane Beryl", x = "Time", y = "Percent DO")+
   theme_bw()+
-  geom_label(aes(x = WC$DateTime[115], y = 10, label = "Vertical Bars = Night"), fill = "lightblue")+
-  geom_label(aes(x = WC$DateTime[57], y = 96, label = "Active Hurricane Beryl"), fill = "red")
+  geom_label(aes(x = WC$DateTime[115], y = 30, label = "Vertical Bars = Night"), fill = "lightblue")+
+  geom_label(aes(x = WC$DateTime[42], y = 95, label = "Active Hurricane Beryl"), fill = "red")+
+  geom_label(aes(x = WC$DateTime[26], y = 10, label = "hypoxia occurs <20% DO"), fill = "orange", alpha=0.5)
+
 o_sma1
 ```
+
+## Results
+
+From this plot, we can see that oxygen levels dropped a night across all 24 hr cycles. There were also drops of dissolved oxygen levels into hypoxia (\<20% saturation) during the hurricane and into anoxia (0% saturation) at the end of the hurricane, with a return to values in the 50%-75% range after the hurricane.
+
+Based on these visuals, I would suggest that we accept my alternative hypothesis that dissolved oxygen values would drop significantly overnight and in hurricane conditions.
