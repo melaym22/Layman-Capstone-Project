@@ -41,7 +41,7 @@ My null hypothesis is that there is no relationship between chlorophyll and temp
 
 My alternative hypothesis is that chlorophyll levels are positively correlated with water temperature. Warmer water temperatures are indicative of recent sunlight which suggests that more photosynthesis is processed in the river, resulting in more chlorophyll.
 
-## Plot
+## Plotting Data
 
 To test this, I'll first plot this proposed relationship (two continutous variables) using a scatterplot, and will later test a generalized linear model.
 
@@ -84,14 +84,14 @@ ggplot(WC, aes(Chlorophyll, Temperature))+
 
 This doesn't seem to make that dramatic of a difference, but the curve may represent a few more data points. As a last check, I'll test the assumptions of both model types
 
-## Build the Models
+## Building the Models
 
 ```{r}
 WC_lm <- lm(Chlorophyll~Temperature, data = WC)
 WC_glm <- glm(Chlorophyll ~ Temperature, data = WC, family = poisson)
 ```
 
-## Check the model assumption
+## Checking the model assumptions
 
 ```{r}
 autoplot(WC_lm)
@@ -121,7 +121,7 @@ Normal Q-Q - again, the right tail has some deviance from the line, but overall 
 
 Scale Location & RvLeverage - these look nearly identical to the linear model
 
-## Interpret the model
+## Running/Interpreting the Model
 
 Although it may not make a huge difference, I'm going to choose to test a non-linear model because it represents the data I want to test slightly better.
 
@@ -149,7 +149,7 @@ summary(WC_glm)
 
 From this I see that the y-intercept is -0.71212 and the slope is 0.07174. The null deviance is 34.743 and the residual deviance is 21.704, so about 62.5% of the variation in chlorophyll is associated with temperature (really good for a field test).
 
-## Make a final plot
+## Replotting the Data
 
 We use `expand.grid()` to generate a set of "new x" values remembering to name the single column the same as in the original data set (`Temperature`)
 
@@ -195,10 +195,6 @@ ggplot(WC, aes(Temperature, Chlorophyll))+
   #now add the fits and the CIs 
   geom_smooth(data = addThese, aes(ymin = lwr, ymax = upr), stat = "identity")+
   theme_bw()
-
-ggplot(WC, aes(Chlorophyll, Temperature))+
-  geom_point(size = 3, alpha = 0.5)+
-  geom_smooth(method = "lm", se = F)
 ```
 
 This looks much better!

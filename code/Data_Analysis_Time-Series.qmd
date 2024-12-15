@@ -81,7 +81,7 @@ First, we need to add our moving average to our data frame for plotting. It shou
 WC$sma1 <- as.numeric(WC_O2)
 ```
 
-Now we can plot
+## Plotting Data
 
 ```{r}
 night1 <- data.frame(X=c(WC$DateTime[10],WC$DateTime[18]), Y = 3)

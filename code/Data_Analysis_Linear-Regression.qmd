@@ -41,9 +41,9 @@ My null hypothesis is that there is no relationship between chlorophyll and temp
 
 My alternative hypothesis is that chlorophyll levels are positively correlated with water temperature. Warmer water temperatures are indicative of recent sunlight which suggests that more photosynthesis is processed in the river, resulting in more chlorophyll.
 
-## Plot Data
+## Plotting Data
 
-To test this, I'll first plot this proposed relationship (two continutous variables) using a scatterplot, and will later run a linear regression.
+To test this, I'll first plot this proposed relationship (two continuous variables) using a scatterplot, and will later run a linear regression.
 
 ```{r}
 ggplot(WC,aes(x=Temperature,y=Chlorophyll))+
@@ -53,7 +53,11 @@ ggplot(WC,aes(x=Temperature,y=Chlorophyll))+
 
 There appears to be a strong positive relationship, indicating that as temperature increases, so does chlorophyll.
 
+## Guessing Relationships
+
 (The rise values can be mapped as (29.3-23) and the run as (5.2-1.8). M=6.3/3.4 or 1.85, so I estimate the slope to be \~1.85 and the y intercept to be around 19.5.
+
+## Creating a Model
 
 Next, I'll build my statistical model. Since I'm going to run a linear regression, I'll need to start with a model
 
@@ -63,6 +67,8 @@ WCmodel
 ```
 
 So, here the slope is 1.733 and the y-int is 19.728. My guesses weren't too far off.
+
+## Checking Assumptions
 
 I'll need to check my assumptions before running any tests
 
@@ -82,6 +88,8 @@ RvLeverage - There may be a few points with larger leverage here.
 
 Overall, a polynomial model may fit this scenario better, but for now, I'm going to proceed with the linear model
 
+## Running/Interpreting the Model
+
 I can move onto my tests
 
 ```{r}
@@ -98,7 +106,7 @@ summary(WCmodel)
 
 From this I see that the y-intercept is 19.7281 and the slope is 1.7325. The adjusted R2 is 0.3769, which means that about 37.69% of the variation in chlorophyll is associated with temperature (pretty good for a field test).
 
-#### Final plot
+## Replotting the Data
 
 Let's get a nicer looking plot
 
@@ -115,7 +123,7 @@ ggplot(WC, aes(Temperature, Chlorophyll))+
       )
 ```
 
-##### Results statement
+## Results Statement
 
 There is a statistically significant and positive association between temperature and chlorophyll in the Oswegatchie River (F~1, 295~ = 180.01, p = \<\<\< 0.001, R^2^ = 0.3769).
 
