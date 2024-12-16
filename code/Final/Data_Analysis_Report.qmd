@@ -1,0 +1,267 @@
+---
+title: "Final_Data_Analysis_Report"
+author: "ML"
+format: html
+editor: visual
+---
+
+# Data Analysis
+
+Maggie Layman CAPDAP Final Project 12/18/2024
+
+In this project, I will step through an analysis workflow with my own data set to explore the relationships among variables in the data set.
+
+## Introduction
+
+I will explore the relationship between time and dissolved oxygen saturation and temperature and chlorophyll from the data file "CAPDAP_WC_4Analysis.csv." This data file stems from an original unpublished data set, owned and recorded by Dr. Brad Baldwin, Professor of Biology at St. Lawrence University. This data set was recorded by a hydrolab collecting overnight data from a site along the Oswegatchie River in Heuvelton, NY from July 8-14 2024. It was recorded and uploaded for the purpose of studying invasive Water Chestnuts in the river. This set of data of 297 observations was recorded before, during, and after the remnants of Hurricane Beryl entered the area of Heuvelton and created flooding of the river.
+
+To prepare this data for analysis, I checked the data for mistakes and outliers, removing points I deemed to be false, where pH was greater than 7.5 and Chlorophyll was greater than 10. I checked the levels of factor data and found no need for changing these. I then altered necessary data types, changing Site Type to a factor variable, Date to a date variable, time to a time variable, and creating a new variable, "DateTime," which combined both date and time into one variable. I changed variable names for clarity, altering "Temperature_C" to "Temperature", and "Dissolved_Oxygen_Saturation" to DO." I saved this revised data set into a .csv file called "CAPDAP_WC_4Analysis.csv."
+
+## Analysis 1
+
+In my first analysis, I wish to look at the relationship between **time (predictor variable, interval) and DO% SAT (response variable, ratio)**.
+
+My null hypothesis is that there is no relationship between Time of Day and Dissolved Oxygen Saturation in my Water Chestnut data or the Hurricane Timeline and Dissolved Oxygen Saturation.
+
+My alternative hypothesis is that overnight, due to less photosynthesis and therefore less oxygen produced, dissolved oxygen values would drop. Seasonally, shifts in temperature are indicative of changes in DO concentrations, where warm summer temperatures from the sun coincide with high levels of photosynthesis (**6CO~2~ + 6H~2~O → C~6~H~12~O~6~ + 6O~2)~** of algae and submerged aquatic vegetation, in turn transferring oxygen from the air to dissolved oxygen of the river ("Factsheet on Water"). This same logic can be applied on a smaller scale, where overnight, lack of sunlight drops the temperature, coinciding with nightly limits to photosynthesis, while plants still respire ((**C6H12O6 + 6O2 → 6CO2 + 6H2O + energy)**, resulting in low DO overnight. I also alternatively hypothesize that dissolved oxygen will drop with hurricane effects because flooding will flush degrading organic material in the water, inducing respiration and therefore lowering dissolved oxygen. Dissolved oxygen concentration in rivers are subject to processes where respiration is induced by large sums of organic matter flooded into channels ("Intense Summer Floods"). Hurricane Beryl resulting in mass flooding events, specifically of river banks, where organic material would fall into the Oswegatchie River, resulting in high respiration rates, and therefore less DO.
+
+I will use the following workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+
+I'll start by setting up a clean environment and package installation
+
+```{r}
+rm (list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(forecast) #for moving averages
+library(zoo) #for moving averages
+```
+
+Next, I'll read in the data file
+
+```{r}
+WC<- read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
+```
+
+And alter the data types
+
+```{r}
+WC$Site_Type <- as.factor(WC$Site_Type) #factor variables
+WC$Date<-ymd(WC$Date) #date variable
+WC$Time<-hms(WC$Time) #time variable
+WC$DateTime <- with(WC, Date + Time) #combines both variables
+```
+
+### In this project, I'll analyze time as a moving average
+
+A moving average is a method for analyzing data points by creating a series of averages of different subsets of the data. I'll use a *simple moving average* to average data points over a specified number of time periods.
+
+First, I'll create a *time series object* using the `ts()` function which comes with base R.
+
+```{r}
+WC_O2 <- WC$DO
+WC_O2 <- ts(WC_O2, frequency = 24, 
+                start = c(2024,7) #indicates that the data begin in Jan 2023
+                )
+```
+
+Now, I'll use the `rollmean()` function from the `zoo` package to calculate a simple moving average.
+
+```{r}
+WC_sma1 <- rollmean(WC_O2, k = 7, #the integer width of the rolling window (odd)
+                      fill = NA #pads the series with NA values at the start and stop where the moving average cannot be computed
+                      )
+```
+
+I'll add the moving average to my data frame for plotting.
+
+```{r}
+WC$sma1 <- as.numeric(WC_O2)
+```
+
+### Plotting Data
+
+Here, I'll make a plot that shows the changes in DO, highlighting where DO levels becomes detrimental to life (DO \<20% isn't enough oxygen to support organisms long-term). I'll also show the section of time when Hurricane Beryl Remnants hit Heuvelton, NY (7/9-7/11). I'll make blue bars to indicate nighttime conditions.
+
+First, I need to make objects that frame aesthetic additions to my plot
+
+```{r}
+night1 <- data.frame(X=c(WC$DateTime[10],WC$DateTime[18]), Y = 3) #blue bar (night) DFs
+night2 <- data.frame(X=c(WC$DateTime[34],WC$DateTime[42]), Y = 3)
+night3 <- data.frame(X=c(WC$DateTime[58],WC$DateTime[66]), Y = 3)
+night4 <- data.frame(X=c(WC$DateTime[82],WC$DateTime[90]), Y = 3)
+night5 <- data.frame(X=c(WC$DateTime[106],WC$DateTime[113]), Y = 3)
+night6 <- data.frame(X=c(WC$DateTime[129],WC$DateTime[137]), Y = 3)
+hurricane <- data.frame(X=c(WC$DateTime[12],WC$DateTime[225]), Y = 100) #hurricane (7/9-7/11) DF
+hypoxia <-   data.frame(X=c(WC$DateTime[149],WC$DateTime[148]), Y=20) #hurricane DF (D0<20)
+```
+
+Now, I can use them to make my plot
+
+```{r}
+o_sma1 <-ggplot(WC, aes(x =DateTime))+
+  geom_line(aes(y = sma1), color = "black", size = 0.2) + #moving average
+  geom_vline(xintercept=WC$DateTime[12],linetype=4)+ #indicates start of hurricane
+  geom_vline(xintercept=WC$DateTime[225],linetype=4)+ #indicates end of hurricane
+  geom_hline(yintercept=20,linetype=2)+ #indicates hypoxia
+  geom_area(aes(x=X,y=Y),data=hypoxia,alpha=0.2,fill="brown")+
+  geom_area(aes(x=X,y=Y),data=hurricane,alpha=0.2,fill="red")+
+  geom_vline(xintercept=WC$DateTime[10:18],linetype=3, alpha=0.5, colour = "blue")+ #indicates night hours
+  geom_vline(xintercept=WC$DateTime[34:42],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[58:66],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[82:90],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[106:113],linetype=3, alpha=0.5, colour = "blue")+
+  geom_vline(xintercept=WC$DateTime[129:137],linetype=3, alpha=0.5, colour = "blue")+
+  geom_area(aes(x=X,y=Y),data=night1,alpha=0.7,fill="blue")+ #baby blue bars for night
+  geom_area(aes(x=X,y=Y),data=night2,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night3,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night4,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night5,alpha=0.7,fill="blue")+
+  geom_area(aes(x=X,y=Y),data=night6,alpha=0.7,fill="blue")+
+  labs(title = "Dissolved Oxygen during Hurricane Beryl", x = "Time", y = "Percent DO")+
+  theme_bw()+
+  geom_label(aes(x = WC$DateTime[115], y = 30, label = "Vertical Bars = Night"), fill = "lightblue")+
+  geom_label(aes(x = WC$DateTime[42], y = 95, label = "Active Hurricane Beryl"), fill = "red")+
+  geom_label(aes(x = WC$DateTime[2], y = 10, label = "Hypoxia"), fill = "orange", alpha=0.5)
+
+```
+
+```{r}
+o_sma1
+```
+
+### Results
+
+From this plot, we can see that oxygen levels dropped at night across all 24 hr cycles. There were also drops of dissolved oxygen levels into hypoxia (\<20% saturation) during the hurricane and into anoxia (0% saturation) at the end of the hurricane, with a return to values in the 50%-75% range after the hurricane.
+
+Based on these visuals, I would suggest that we accept my alternative hypothesis that dissolved oxygen values would drop significantly overnight and in hurricane conditions. I would also note that there appears to be an interaction between hurricane conditions and night conditions on dissolved oxygen, where DO lows last several hours beyond night conditions during the hurricane and take longer to recover during the day to higher levels. These trends make sense due to the compounding effects of 1) having no sun to power photosynthesis overnight and 2) the addition of decomposing material into the river, which needs to be processed via respiration. Both of these effects cause lower dissolved oxygen levels in the river independently, and when combined, we see struggling levels of oxygen, reaching hypoxia and anoxia.
+
+## Analysis 2
+
+In my second analysis, I will explore the relationship between **temperature (predictor variable, interval)** and **chlorophyll (reponse variable, ration)** from the data file "CAPDAP_WC_4Analysis.csv."
+
+My null hypothesis is that there is no relationship between chlorophyll and temperature in my Water Chestnut data.
+
+My alternative hypothesis is that chlorophyll levels are positively correlated with water temperature. Since the section of the Oswegatchie River at Heuvelton is relatively shallow, wide, and slow, the temperature will vary with the amount of sunlight available. We can analyze this in relation to chlorophyll and temperature as warmer water temperatures allow for chemical processes, like photosynthesis to occur. Summer sunlight triggers plants to keep producing chlorophyll to use during photosynthesis ("The Chemistry Behind") This suggests that with higher temperatures, we should find higher levels of chlorophyll in the river. "Chl *a* concentrations were highest when river temperatures were above 28°C" (Turner, Robert Eugene).
+
+I will use the following workflow model: plot data (and guess the results) → build the statistical model → Check the model assumptions → Interpret the model → Make a final plot
+
+I'll start by setting up a clean environment and package installation
+
+```{r}
+rm (list = ls())
+library(tidyverse)
+library(here)
+library(ggfortify)
+```
+
+Next, I'll read in the data file
+
+```{r}
+WC<- read.csv(here("data", "CAPDAP_WC_4Analysis.csv"))
+```
+
+For this analysis, I don't need to alter any data types.
+
+### Plotting Data
+
+To test this, I'll first plot this proposed relationship (two continuous variables) using a scatterplot, and will later run a linear regression.
+
+```{r}
+ggplot(WC,aes(x=Temperature,y=Chlorophyll))+
+  geom_point()+ #scatterplot
+  theme_bw()
+```
+
+There appears to be a strong positive relationship, indicating that as temperature increases, so does chlorophyll.
+
+### Guessing Relationships
+
+(The rise values can be mapped (5.2-1.8) and the run as as (29.3-23). M=3.4/6.3 or 0.5397, so I estimate the slope to be \~0.5397 and the y intercept to be \~-11.112.
+
+### Creating a Model
+
+Next, I'll build my statistical model. Since I'm going to run a linear regression, I'll need to start with a model
+
+```{r}
+WCmodel <- lm(Chlorophyll~Temperature, data=WC)
+WCmodel
+```
+
+So, here the slope is 0.2187 and the y-int is -2.4965. My guesses were a bit off, with a lot of data gathered below x=24, I could see how several models fit the data appropriately.
+
+### Checking Assumptions
+
+I'll need to check my assumptions before running any tests
+
+```{r}
+autoplot(WCmodel)
+```
+
+Reviewing these charts, I would conclude:
+
+RvFit model - a little wave, but overall a linear model is likely appropriate
+
+Normal Q-Q - looks good, pretty normal data fit to this line
+
+Scale Location - this is a bit concerning, it indicates that there is an unevenness in the residuals
+
+RvLeverage - There may be a few points with larger leverage here.
+
+Overall, a polynomial model may fit this scenario better, but for now, I'm going to proceed with the linear model
+
+### Running/Interpreting the Model
+
+I can move onto my tests
+
+```{r}
+anova(WCmodel)
+```
+
+Here I see that there is a significant association between temperature and chlorophyll.
+
+Let's dig in further.
+
+```{r}
+summary(WCmodel)
+```
+
+From this I see that the y-intercept is 19.7281 and the slope is 1.7325. The adjusted R2 is 0.3769, which means that about 37.69% of the variation in chlorophyll is associated with temperature (pretty good for a field test).
+
+### Replotting the Data
+
+Let's get a nicer looking plot
+
+```{r}
+ggplot(WC, aes(Temperature, Chlorophyll))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ggtitle("Comparing Temp and Chl in Water Chestnut")+
+  labs(x = "Water Temperature in Degrees Celsius", y = "Chlorophyll (μg/L)")+
+  theme_bw()+
+  theme(
+    axis.title.x=element_text(colour="blue", size=rel(1)), # adjust colour and size of x-axis title
+    axis.title.y=element_text(colour="darkgreen", size=rel(1)), # adjust colour and size of x-axis title
+      )
+```
+
+### Results Statement
+
+There is a statistically significant and positive association between temperature and chlorophyll in the Oswegatchie River (F~1, 295~ = 180.01, p = \<\<\< 0.001, R^2^ = 0.3769).
+
+This makes sense! When it is cold, the plant machinery slows down, resulting in less chlorophyll in the water. The synthesis of chlorophyll, which is essential for plant health, requires sunlight and warm temperatures. So in warm temperatures, plants can produce and synthesize chlorophyll, increasing the amount in the water. As a result, we found a positive correlation between temperature and chlorophyll.
+
+## Challenges
+
+Through this analysis, I had to do a lot of exploring in the time series and plotting functions. I didn't know how to make time series objects, before, but with research (and the help of Dr. Barthlemess), I learned how to make these objects and plot a moving average. In the preliminary analysis period of my project, I spent a lot of time researching time series tests and fiddling with date and time objects. I originally struggled to make my time variable fit a 24 hour scale, and also struggled merging it with my date variables, but I finally found a combination of solutions to achieve the final WC\$DateTime variable that I was looking for. I learned about Augmented Dickey-Fuller and KPSS tests, but eventually concluded that for the scope of this project, I would analyze my data with a simple moving average and interpret patterns based on that plot. I also used the "Getting Started with R" book to learn more about making *pretty* plots, which I incorporated in the visuals of my final plots.
+
+## References
+
+"The Chemistry Behind the Color." *US Forest Service*, <https://www.fs.usda.gov/detail/r2/home/?cid=stelprdb5388915#:~:text=of%20Day%2FNight-,The%20synthesis%20of%20chlorophyll%20in%20plants%20requires%20sunlight%20and%20warm,and%20break%20down%20of%20chlorophyll.>.
+
+"FACTSHEET ON WATER QUALITY PARAMETERS." *Environmental Protection Agency*, Jul, 2021, <https://www.epa.gov/system/files/documents/2021-07/parameter-factsheet_do.pdf>.
+
+"Intense summer floods may induce prolonged increases in benthic respiration rates of more than one year leading to low river dissolved oxygen ." *Journal of Hydrology X*, vol. 8, 2020, <https://www.sciencedirect.com/science/article/pii/S2589915520300079>.
+
+Turner, Robert E. "Peak chlorophyll a concentrations in the lower Mississippi River from 1997 to 2018." *Limnology and Oceanography*, vol. 67, no. 3, 2022, <https://www.researchgate.net/publication/358269686_Peak_chlorophyll_a_concentrations_in_the_lower_Mississippi_River_from_1997_to_2018>.
